@@ -5,6 +5,10 @@ Tx --> 17
 RTX --> 4
 Mode --> RTU
 Baud Rate --> 115200
+
+-------The Master connects to the Wi-Fi with given credentials----------
+ssid:
+pass:
 */
 
 #include "string.h"
@@ -12,6 +16,7 @@ Baud Rate --> 115200
 #include "modbus_params.h"  // for modbus parameters structures
 #include "mbcontroller.h"
 #include "sdkconfig.h"
+#include "constants.h"
 
 #define MB_PORT_NUM     (CONFIG_MB_UART_PORT_NUM)   // Number of UART port used for Modbus connection
 #define MB_DEV_SPEED    (CONFIG_MB_UART_BAUD_RATE)  // The communication speed of the UART
@@ -19,9 +24,7 @@ Baud Rate --> 115200
 // The number of parameters that intended to be used in the particular control process
 #define MASTER_MAX_CIDS num_device_parameters
 
-// Number of reading of parameters from slave
-#define MASTER_MAX_RETRY 30
-
+/*
 // Timeout to update cid over Modbus
 #define UPDATE_CIDS_TIMEOUT_MS          (500)
 #define UPDATE_CIDS_TIMEOUT_TICS        (UPDATE_CIDS_TIMEOUT_MS / portTICK_RATE_MS)
@@ -52,6 +55,7 @@ enum {
 enum {
     Voltage = 0
 };
+*/
 
 // Example Data (Object) Dictionary for Modbus parameters:
 // The CID field in the table must be unique.
