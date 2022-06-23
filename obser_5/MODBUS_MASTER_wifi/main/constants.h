@@ -1,3 +1,11 @@
+/*-----MODBUS Constants---------------*/
+
+#define MB_PORT_NUM     (CONFIG_MB_UART_PORT_NUM)   // Number of UART port used for Modbus connection
+#define MB_DEV_SPEED    (CONFIG_MB_UART_BAUD_RATE)  // The communication speed of the UART
+
+// The number of parameters that intended to be used in the particular control process
+#define MASTER_MAX_CIDS num_device_parameters
+
 // Timeout to update cid over Modbus
 #define UPDATE_CIDS_TIMEOUT_MS          (500)
 #define UPDATE_CIDS_TIMEOUT_TICS        (UPDATE_CIDS_TIMEOUT_MS / portTICK_RATE_MS)
@@ -17,7 +25,7 @@
 // Options can be used as bit masks or parameter limits
 #define OPTS(min_val, max_val, step_val) { .opt1 = min_val, .opt2 = max_val, .opt3 = step_val }
 
-static const char *TAG = "3CIOT_MASTER";
+static const char *TAG = "3CIOT_MASTER_WiFi";
 
 // Enumeration of modbus device addresses accessed by master device
 enum {
