@@ -55,6 +55,7 @@ void wifi_connection()
         .sta = {
             .ssid = SSID,
             .password = PASS}};
+    printf("SSID Is: %s\n",SSID);
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configuration);
     // 3 - Wi-Fi Start Phase
     esp_wifi_start();
@@ -79,7 +80,7 @@ esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
 static void post_rest_function()
 {
     esp_http_client_config_t config_post = {
-        .url = "https://a3v9x3l7dfviqg-ats.iot.us-east-1.amazonaws.com:8443/topics/obser_7_topic?qos=1",
+        .url = "https://a3v9x3l7dfviqg-ats.iot.us-east-1.amazonaws.com:8443/topics/client/100/motor/101/?qos=1",
         .method = HTTP_METHOD_POST,
         .cert_pem = (const char *)cert_start,
         .client_cert_pem = (const char *)certificate_start,
@@ -88,7 +89,8 @@ static void post_rest_function()
         
     esp_http_client_handle_t client = esp_http_client_init(&config_post);
 
-    char  *post_data = "{\"fields\":{\"Memory\":{\"doubleValue\":\"2\"},\"Name\":{\"stringValue\":\"Additional Old ESP32\"}}}";
+    // char  *post_data = "{\"3CIOT\":{\"JCBRO\":{\"Sachin\":\"2\"},\"CANBUS\":{\"stringValue\":\"Additional Old ESP32\"}}}";
+    char  *post_data = "{\"voltage\":\"3.14\",\"current\":\"5.46\"}";
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 

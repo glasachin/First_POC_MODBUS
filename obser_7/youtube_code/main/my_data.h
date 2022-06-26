@@ -1,7 +1,7 @@
 #ifndef MY_DATA
 #define MY_DATA
 
-#define SSID "JCBRO"
-#define PASS "jcbro@321"
+#define SSID "sachin"
+#define PASS "Sachin@dadri3"
 
 #endif
