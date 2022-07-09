@@ -25,7 +25,8 @@ pass:
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
+#include "esp_http_client.h"
+#include "esp_http_server.h"
 #include "constants.h"
 
 
@@ -41,6 +42,10 @@ pass:
 #define EXAMPLE_ESP_WIFI_PASS      "Sachin@dadri3"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  3
 
+char vtg_str[6], cur_str[6];
+float voltage, current;
+// char json_data[100] = "{\"voltage\":\"";
+char json_data[100];
 /* FreeRTOS event group to signal when we are connected*/
 static EventGroupHandle_t s_wifi_event_group;
 
@@ -141,9 +146,6 @@ void wifi_init_sta(void)
     vEventGroupDelete(s_wifi_event_group);
 }
 
-
-
-
 /*------------------------------------------------------------*/
 // Example Data (Object) Dictionary for Modbus parameters:
 // The CID field in the table must be unique.
@@ -158,6 +160,9 @@ const mb_parameter_descriptor_t device_parameters[] = {
     // { CID, Param Name, Units, Modbus Slave Addr, Modbus Reg Type, Reg Start, Reg Size, Instance Offset, Data Type, Data Size, Parameter Options, Access Mode}
     { Voltage, STR("Voltage"), STR("Volts"), MB_DEVICE_ADDR1,MB_PARAM_HOLDING, 0, 2,
                         INPUT_OFFSET(input_data0), PARAM_TYPE_FLOAT, 2, OPTS( -100, 100, 1 ), PAR_PERMS_READ_WRITE_TRIGGER },
+    { Current, STR("Current"), STR("Amps"), MB_DEVICE_ADDR1,MB_PARAM_HOLDING, 2, 2,
+                        INPUT_OFFSET(input_data0), PARAM_TYPE_FLOAT, 2, OPTS( -100, 100, 1 ), PAR_PERMS_READ_WRITE_TRIGGER },
+                    
 };
 
 /*-------Global Datas--------------*/
@@ -273,9 +278,52 @@ const mb_parameter_descriptor_t* read_slave(uint16_t cid)
 
 }
 
+/*----HTTP Related----*/
+esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
+{
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ON_DATA:
+        printf("HTTP_EVENT_ON_DATA: %.*s\n", evt->data_len, (char *)evt->data);
+        break;
+
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
+static void post_rest_function(float volt, float curr)
+{
+    esp_http_client_config_t config_post = {
+        .url = "https://a3v9x3l7dfviqg-ats.iot.us-east-1.amazonaws.com:8443/topics/client/100/motor/101/?qos=1",
+        .method = HTTP_METHOD_POST,
+        .cert_pem = (const char *)cert_start,
+        .client_cert_pem = (const char *)certificate_start,
+        .client_key_pem = (const char *)private_start,
+        .event_handler = client_event_post_handler};
+            
+    esp_http_client_handle_t client = esp_http_client_init(&config_post);
+
+    // char  *post_data = "{\"3CIOT\":{\"JCBRO\":{\"Sachin\":\"2\"},\"CANBUS\":{\"stringValue\":\"Additional Old ESP32\"}}}";
+    
+    sprintf(json_data, "{\"voltage\":\"%0.2f\",\"current\":\"%0.2f\"}",volt,curr);
+    printf("Sent JSON: %s\n", json_data);
+    // char  *post_data = "{\"voltage\":\"3.14\",\"current\":\"5.46\"}";
+    // esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_post_field(client, json_data, strlen(json_data));
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    esp_http_client_perform(client);
+    esp_http_client_cleanup(client);
+}
+
+
 void app_main(void)
 {
+    
     const mb_parameter_descriptor_t* param_value = NULL;
+    
     // Initialization of device peripheral and objects
     ESP_ERROR_CHECK(master_init());
     vTaskDelay(10);
@@ -299,19 +347,29 @@ void app_main(void)
     {
         printf("Reading Modbus Data\n");
         
-        param_value = read_slave(0); // This take the CID value
-
+        param_value = read_slave(0); // This take the CID value. This function is changing the 'value' directly
         if(param_value != NULL)
         {
             printf("CID %d, %s = %0.2f %s\n", param_value->cid, (char*)param_value->param_key, value, (char*)param_value->param_units );
+            voltage = value;
+            
+        }
+
+        vTaskDelay(1000);
+        param_value = read_slave(1); // This take the CID value
+        
+        if(param_value != NULL)
+        {
+            printf("CID %d, %s = %0.2f %s\n", param_value->cid, (char*)param_value->param_key, value, (char*)param_value->param_units );
+            current = value;
+            post_rest_function(voltage, current);
         }
         
         else
         {
             printf("Error in Data Reading. \n");
         }
-            
 
-        vTaskDelay(100);
+        vTaskDelay(1000);
     }
 }
