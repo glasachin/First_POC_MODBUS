@@ -1,0 +1,16 @@
+{
+    "product_id":"ABCDEFGHIJ",
+     "channels":[
+            {
+                "channel_id": "1000",
+                "action":"START"
+                
+    },
+   {
+                "channel_id": "2000",
+        "action":"STOP"
+    }
+			
+    ]
+
+} 
